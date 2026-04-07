@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme {
+  --color-canvas: #FDFBF7;
+  --color-canvas-alt: #F5F3ED;
+  --color-surface: #FFFFFF;
+  --color-accent: #8A9A86;
+  --color-accent-hover: #7b8a77;
+  --color-accent-light: #d1dacd;
+  --color-text-main: #2B2D2F;
+  --color-text-muted: #6B7280;
+
+  --color-emo-joy-bg: #F5EAC8;
+  --color-emo-joy-txt: #6B4D10;
+  --color-emo-joy: #D4A843;
+  --color-emo-anx-bg: #F5DECE;
+  --color-emo-anx-txt: #6B3010;
+  --color-emo-anx: #C97840;
+  --color-emo-frust-bg: #EDD4D4;
+  --color-emo-frust-txt: #5A1E1E;
+  --color-emo-frust: #B56B6B;
+  --color-emo-calm-bg: #D4E6DB;
+  --color-emo-calm-txt: #2D5940;
+  --color-emo-calm: #7B9E87;
+  --color-emo-grat-bg: #E8D8F5;
+  --color-emo-grat-txt: #3D1A5E;
+  --color-emo-grat: #9A78C0;
+
+  --font-sans: 'Outfit', sans-serif;
+  --font-serif: 'Lora', serif;
+
+  --shadow-soft: 0 10px 40px -10px rgba(0, 0, 0, 0.05);
+  --shadow-float: 0 20px 40px -20px rgba(138, 154, 134, 0.3);
+}
+
+@layer base {
+  body {
+    @apply bg-canvas text-text-main font-sans antialiased;
+    /* Prevent pull-to-refresh on mobile for a native app feel */
+    overscroll-behavior-y: none;
+  }
+}
+
+/* Hide scrollbar for clean UI */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes wave {
+  0% { transform: scaleY(0.2); }
+  100% { transform: scaleY(1); }
+}
