@@ -10,26 +10,23 @@ export function SettingsProvider({ children }) {
 
   useEffect(() => {
     if (user?.id) {
-      setSettings(settingsService.getSettings(user.id));
+      settingsService.getSettings(user.id).then(setSettings);
     }
   }, [user?.id]);
 
   const updateSetting = useCallback((key, value) => {
     if (!user?.id) return;
-    const updated = settingsService.updateSetting(user.id, key, value);
-    setSettings(updated);
+    settingsService.updateSetting(user.id, key, value).then(setSettings);
   }, [user?.id]);
 
   const updateMultiple = useCallback((updates) => {
     if (!user?.id) return;
-    const updated = settingsService.updateSettings(user.id, updates);
-    setSettings(updated);
+    settingsService.updateSettings(user.id, updates).then(setSettings);
   }, [user?.id]);
 
   const reset = useCallback(() => {
     if (!user?.id) return;
-    const defaults = settingsService.resetSettings(user.id);
-    setSettings(defaults);
+    settingsService.resetSettings(user.id).then(setSettings);
   }, [user?.id]);
 
   return (

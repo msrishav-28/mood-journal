@@ -1,38 +1,92 @@
 /**
- * AI Service — Placeholder
- * 
- * When OpenAI keys are configured, these functions will call
- * Whisper for transcription and GPT-4o for analysis.
- * For now, they return simulated results after a small delay.
+ * AI Service — Supports Deepgram and OpenAI integration with offline fallbacks
  */
 
 const OPENAI_KEY = import.meta.env.VITE_OPENAI_API_KEY;
-const isConfigured = () => OPENAI_KEY && !OPENAI_KEY.startsWith('sk-...');
+const DEEPGRAM_KEY = import.meta.env.VITE_DEEPGRAM_API_KEY;
 
-const EMOTIONS = ['Calm', 'Joy', 'Anxious', 'Frustrated', 'Grateful', 'Reflective', 'Sad'];
+const isOpenAIConfigured = !!(
+  OPENAI_KEY &&
+  !OPENAI_KEY.startsWith('sk-...') &&
+  !OPENAI_KEY.startsWith('your-') &&
+  !OPENAI_KEY.startsWith('placeholder') &&
+  OPENAI_KEY !== ''
+);
+
+const isDeepgramConfigured = !!(
+  DEEPGRAM_KEY &&
+  !DEEPGRAM_KEY.startsWith('your-') &&
+  !DEEPGRAM_KEY.startsWith('placeholder') &&
+  DEEPGRAM_KEY !== ''
+);
 
 const delay = (ms) => new Promise(r => setTimeout(r, ms));
 
 /** 
- * Transcribe audio blob using OpenAI Whisper.
- * Placeholder: returns a mock transcript after a short delay.
+ * Transcribe audio blob using Deepgram (primary) or OpenAI Whisper (secondary).
+ * Falls back to simulated mock transcription if neither is configured.
  */
-export const transcribeAudio = async (_audioBlob) => {
-  if (isConfigured()) {
-    // TODO: Real Whisper API call
-    // const formData = new FormData();
-    // formData.append('file', audioBlob, 'recording.webm');
-    // formData.append('model', 'whisper-1');
-    // const res = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-    //   method: 'POST',
-    //   headers: { 'Authorization': `Bearer ${OPENAI_KEY}` },
-    //   body: formData
-    // });
-    // const data = await res.json();
-    // return data.text;
+export const transcribeAudio = async (audioBlob) => {
+  // 1. Try Deepgram API
+  if (isDeepgramConfigured) {
+    try {
+      console.log('[AI Service] Attempting Deepgram transcription...');
+      const res = await fetch('https://api.deepgram.com/v1/listen?model=nova-2&smart_format=true', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${DEEPGRAM_KEY}`,
+          'Content-Type': audioBlob.type || 'audio/webm'
+        },
+        body: audioBlob
+      });
+      
+      if (!res.ok) {
+        throw new Error(`Deepgram API returned status ${res.status}`);
+      }
+      
+      const data = await res.json();
+      const transcript = data.results?.channels?.[0]?.alternatives?.[0]?.transcript;
+      if (transcript) {
+        console.log('[AI Service] Deepgram transcription successful:', transcript);
+        return transcript;
+      }
+    } catch (error) {
+      console.error('[AI Service] Deepgram transcription failed:', error);
+    }
   }
 
-  // Mock transcription
+  // 2. Try OpenAI Whisper API as fallback
+  if (isOpenAIConfigured) {
+    try {
+      console.log('[AI Service] Attempting OpenAI Whisper transcription fallback...');
+      const formData = new FormData();
+      formData.append('file', audioBlob, 'recording.webm');
+      formData.append('model', 'whisper-1');
+      
+      const res = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${OPENAI_KEY}`
+        },
+        body: formData
+      });
+      
+      if (!res.ok) {
+        throw new Error(`OpenAI Whisper API returned status ${res.status}`);
+      }
+      
+      const data = await res.json();
+      if (data.text) {
+        console.log('[AI Service] OpenAI Whisper transcription successful:', data.text);
+        return data.text;
+      }
+    } catch (error) {
+      console.error('[AI Service] OpenAI Whisper transcription failed:', error);
+    }
+  }
+
+  // 3. Simulated Fallback
+  console.log('[AI Service] No speech-to-text service configured or successful. Returning mock transcription.');
   await delay(1500);
   
   const mockTranscripts = [
@@ -46,18 +100,60 @@ export const transcribeAudio = async (_audioBlob) => {
 };
 
 /**
- * Analyze a transcript using GPT-4o.
+ * Analyze a transcript using GPT-4o-mini.
  * Extracts: dominant emotion, tags, AI insight/reflection.
  */
-export const analyzeTranscript = async (transcript, _persona = 'wellness') => {
-  if (isConfigured()) {
-    // TODO: Real GPT-4o API call
-    // const res = await fetch('https://api.openai.com/v1/chat/completions', { ... });
+export const analyzeTranscript = async (transcript, persona = 'wellness') => {
+  if (isOpenAIConfigured) {
+    try {
+      console.log('[AI Service] Attempting OpenAI Chat GPT-4o-mini analysis...');
+      const res = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${OPENAI_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          response_format: { type: 'json_object' },
+          messages: [
+            {
+              role: 'system',
+              content: `You are an empathetic, insightful mood journal assistant. Analyze the user's transcript and respond in JSON format.
+You must return a JSON object with:
+1. "dominantEmotion": one of the following strings: "Calm", "Joy", "Anxious", "Frustrated", "Grateful", "Reflective", "Sad".
+2. "tags": an array of 1 to 3 relevant emotion tags (from the list above, or others that are suitable).
+3. "aiInsight": a concise (1-3 sentences) reflection or prompt based on the user's entry, tailored to their selected persona: "${persona}".
+Ensure the tone is warm, non-judgmental, and matching the persona style (e.g., student, professional, wellness).`
+            },
+            {
+              role: 'user',
+              content: transcript
+            }
+          ]
+        })
+      });
+      
+      if (!res.ok) {
+        throw new Error(`OpenAI API returned status ${res.status}`);
+      }
+      
+      const data = await res.json();
+      const content = JSON.parse(data.choices[0].message.content);
+      console.log('[AI Service] OpenAI Chat analysis successful:', content);
+      return {
+        dominantEmotion: content.dominantEmotion || 'Reflective',
+        tags: content.tags || ['Reflective'],
+        aiInsight: content.aiInsight || 'Thank you for sharing your thoughts today.'
+      };
+    } catch (error) {
+      console.error('[AI Service] OpenAI Chat analysis failed, falling back to mock:', error);
+    }
   }
 
+  // Fallback to local keyword-based mock analysis
   await delay(1000);
 
-  // Simple keyword-based mock analysis
   const lower = transcript.toLowerCase();
   let tags = [];
   let dominantEmotion = 'Calm';
@@ -87,7 +183,6 @@ export const analyzeTranscript = async (transcript, _persona = 'wellness') => {
     dominantEmotion = 'Reflective';
   }
 
-  // Mock AI insight generation
   const insights = {
     Anxious: `You mentioned feeling overwhelmed — this tends to happen when you're carrying tomorrow's worries in today's body. Consider: what's the one thing you can actually control right now?`,
     Frustrated: `There's friction here, and it clearly matters to you. The frustration often signals that something you value isn't being met. What is it, specifically?`,
@@ -136,4 +231,4 @@ export const generatePrompt = async (persona = 'wellness', _recentEntries = []) 
   return prompts[Math.floor(Math.random() * prompts.length)];
 };
 
-export default { transcribeAudio, analyzeTranscript, generatePrompt };
+export default { transcribeAudio, analyzeTranscript, generatePrompt, isOpenAIConfigured, isDeepgramConfigured };

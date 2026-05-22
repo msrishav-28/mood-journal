@@ -17,8 +17,8 @@
   ![Framer Motion](https://img.shields.io/badge/Framer_Motion-black?style=for-the-badge&logo=framer&logoColor=blue)
   ![Lucide](https://img.shields.io/badge/Lucide_Icons-FF6C37?style=for-the-badge&logo=lucide&logoColor=white)
   <br/>
-  ![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
-  ![NeonDB](https://img.shields.io/badge/NeonDB-00E599?style=for-the-badge&logo=neon&logoColor=black)
+  ![Firebase](https://img.shields.io/badge/firebase-%23039BE5.svg?style=for-the-badge&logo=firebase)
+  ![Deepgram](https://img.shields.io/badge/Deepgram-4F46E5?style=for-the-badge&logo=deepgram&logoColor=white)
   ![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white)
   ![Vercel](https://img.shields.io/badge/vercel-%23000000.svg?style=for-the-badge&logo=vercel&logoColor=white)
 
@@ -28,14 +28,15 @@
 
 ## 📖 Overview
 
-Sentia (formerly Azadita) was built to remove the friction from journaling. Blank pages can be intimidating, and typing feels like work. With Sentia, you simply open the app, tap record, and talk. 
+Sentia was built to remove the friction from journaling. Blank pages can be intimidating, and typing feels like work. With Sentia, you simply open the app, tap record, and talk. 
 
-The application transcribes your thoughts in real-time and uses AI to analyze emotional sentiment, automatically tag your entries, and provide gentle, thoughtful reflections ("Sentia Reflects").
+The application transcribes your thoughts using high-performance speech APIs and uses AI to analyze emotional sentiment, automatically tag your entries, and provide gentle, thoughtful reflections ("Sentia Reflects").
 
 ## ✨ Core Features
 
 - **Voice-First Journaling:** Hands-free recording using the `MediaRecorder` API.
-- **AI-Powered Insights:** Employs Whisper (transcription) and GPT-4o logic (analysis) to extract tags, identify dominant emotions, and summarize patterns.
+- **Dual-Engine Speech-to-Text:** Employs Deepgram's `nova-2` API (primary) or OpenAI Whisper API (fallback) for transcription.
+- **AI-Powered Insights:** Uses OpenAI's `gpt-4o-mini` to extract emotion tags, identify dominant feelings, and generate personalized advice.
 - **Beautiful, Calming Interface:** Built with tailwind, custom CSS keyframes (waveform animations), and `framer-motion` for buttery smooth transitions.
 - **Comprehensive Desktop & Mobile Layouts:** 
   - Mobile: App-like PWA experience with bottom navigation.
@@ -54,16 +55,16 @@ src/
 ├── context/         # React Contexts (Auth, Settings)
 ├── layouts/         # App routing wrappers (Mobile Nav / Desktop Sidebar)
 ├── pages/           # Core Screens (Home, Journal, Insights, Profile, Settings, Auth)
-└── services/        # Backend Abstract Layer (Local Storage for dev, ready for DB)
-    ├── ai.js        # Whisper + GPT APIs
-    ├── auth.js      # Auth Provider
-    ├── db.js        # NeonDB client wrapper
-    ├── entries.js   # CRUD + streak calculator
+└── services/        # Backend Abstract Layer (Local Storage for dev, Firebase in cloud)
+    ├── ai.js        # Deepgram + OpenAI integration
+    ├── auth.js      # Auth service (Firebase Auth / local fallback)
+    ├── entries.js   # Entries persistence (Cloud Firestore / local fallback)
     ├── export.js    # PDF generation and CSV parsing
-    └── settings.js  # Settings persistence
+    ├── firebase.js  # Firebase configuration and initialization
+    └── settings.js  # Settings persistence (Cloud Firestore / local fallback)
 ```
 
-For more details on setting up the real backend and database schema, see **[Backend Setup Guide](docs/BACKEND_SETUP.md)**.
+For more details on setting up the real backend, database schemas, and firebase rules, see **[Backend Setup Guide](docs/BACKEND_SETUP.md)**.
 
 ## 🚀 Quick Start (Local Development)
 
@@ -81,7 +82,7 @@ npm install
 npm run dev
 ```
 
-Visit `http://localhost:5174` to start using the app.
+Visit `http://localhost:5173` (or the port specified in console) to start using the app.
 
 ## 🌐 Vercel Deployment
 
@@ -100,8 +101,8 @@ This project is fully optimized for **Vercel** deployment out of the box.
 - **Animations:** Framer Motion
 - **Icons:** Lucide React
 - **PDF Export:** jsPDF + jsPDF-AutoTable
-- **Target Backend:** NeonDB (PostgreSQL)
-- **Target AI:** OpenAI (Whisper + GPT-4o)
+- **Target Backend:** Firebase Auth + Cloud Firestore
+- **Target AI/STT:** Deepgram (Nova-2) & OpenAI (GPT-4o-mini + Whisper)
 
 ## 🎨 Design System
 

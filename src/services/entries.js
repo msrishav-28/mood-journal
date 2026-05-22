@@ -1,10 +1,9 @@
 /**
- * Entries Service — localStorage fallback
- * 
- * Manages journal entries. When NeonDB is configured,
- * replace localStorage calls with db.query() calls.
+ * Entries Service — Supports Firebase Cloud Firestore and localStorage fallback
  */
 import { v4 as uuidv4 } from 'uuid';
+import { db, isFirebaseConfigured } from './firebase';
+import { collection, query, where, doc, getDoc, setDoc, deleteDoc, getDocs } from 'firebase/firestore';
 
 const STORAGE_KEY = 'sentia_entries';
 
@@ -42,6 +41,14 @@ export const createEntry = async (userId, { transcript, durationSeconds, tags, d
     createdAt: new Date().toISOString()
   };
 
+  if (isFirebaseConfigured && db) {
+    try {
+      await setDoc(doc(db, 'entries', entry.id), entry);
+    } catch (error) {
+      console.error('Error creating entry in Firestore:', error);
+    }
+  }
+
   const entries = getAll();
   entries.unshift(entry); // newest first
   persist(entries);
@@ -50,28 +57,77 @@ export const createEntry = async (userId, { transcript, durationSeconds, tags, d
 
 /** Get all entries for a user, newest first */
 export const getEntries = async (userId) => {
+  if (isFirebaseConfigured && db) {
+    try {
+      const q = query(collection(db, 'entries'), where('userId', '==', userId));
+      const querySnapshot = await getDocs(q);
+      const entries = [];
+      querySnapshot.forEach((docSnap) => {
+        entries.push(docSnap.data());
+      });
+      // Sort client-side to avoid needing composite indexes in Firestore config
+      entries.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      
+      // Update local storage cache for this user
+      const otherUsersEntries = getAll().filter(e => e.userId !== userId);
+      persist([...entries, ...otherUsersEntries]);
+      
+      return entries;
+    } catch (error) {
+      console.error('Error fetching entries from Firestore, falling back to localStorage:', error);
+    }
+  }
   return getAll().filter(e => e.userId === userId);
 };
 
 /** Get a single entry by ID */
 export const getEntry = async (entryId) => {
+  if (isFirebaseConfigured && db) {
+    try {
+      const docRef = doc(db, 'entries', entryId);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        return docSnap.data();
+      }
+    } catch (error) {
+      console.error('Error getting entry from Firestore:', error);
+    }
+  }
   return getAll().find(e => e.id === entryId) || null;
 };
 
 /** Delete an entry */
 export const deleteEntry = async (entryId) => {
+  if (isFirebaseConfigured && db) {
+    try {
+      await deleteDoc(doc(db, 'entries', entryId));
+    } catch (error) {
+      console.error('Error deleting entry from Firestore:', error);
+    }
+  }
   const entries = getAll().filter(e => e.id !== entryId);
   persist(entries);
 };
 
 /** Get entry count for a user */
 export const getEntryCount = async (userId) => {
+  if (isFirebaseConfigured && db) {
+    try {
+      const entries = await getEntries(userId);
+      return entries.length;
+    } catch (error) {
+      console.error('Error fetching entry count, using localStorage fallback:', error);
+    }
+  }
   return getAll().filter(e => e.userId === userId).length;
 };
 
 /** Calculate current streak (consecutive days with at least 1 entry) */
 export const getStreak = async (userId) => {
-  const entries = getAll().filter(e => e.userId === userId);
+  const entries = (isFirebaseConfigured && db) 
+    ? await getEntries(userId) 
+    : getAll().filter(e => e.userId === userId);
+    
   if (entries.length === 0) return 0;
 
   // Group by date
@@ -98,7 +154,10 @@ export const getStreak = async (userId) => {
 
 /** Seed demo data for a user (used when no entries exist) */
 export const seedDemoEntries = async (userId) => {
-  const existing = getAll().filter(e => e.userId === userId);
+  const existing = (isFirebaseConfigured && db)
+    ? await getEntries(userId)
+    : getAll().filter(e => e.userId === userId);
+    
   if (existing.length > 0) return; // don't overwrite
 
   const now = new Date();
@@ -139,6 +198,16 @@ export const seedDemoEntries = async (userId) => {
       createdAt: new Date(now - 1000 * 60 * 60 * 96).toISOString()
     },
   ];
+
+  if (isFirebaseConfigured && db) {
+    try {
+      for (const entry of demoEntries) {
+        await setDoc(doc(db, 'entries', entry.id), entry);
+      }
+    } catch (error) {
+      console.error('Error seeding demo entries in Firestore:', error);
+    }
+  }
 
   const all = getAll();
   all.unshift(...demoEntries);
