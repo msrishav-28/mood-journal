@@ -26,10 +26,6 @@ export default function Journal() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedId, setSelectedId] = useState(null);
 
-  useEffect(() => {
-    loadEntries();
-  }, [user?.id]);
-
   const loadEntries = async () => {
     if (!user?.id) return;
     setLoading(true);
@@ -38,6 +34,11 @@ export default function Journal() {
     if (data.length > 0 && !selectedId) setSelectedId(data[0].id);
     setLoading(false);
   };
+
+  useEffect(() => {
+    loadEntries();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   const filtered = entries.filter(e =>
     !searchQuery || e.transcript?.toLowerCase().includes(searchQuery.toLowerCase()) ||

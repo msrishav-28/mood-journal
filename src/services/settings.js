@@ -6,7 +6,7 @@
 
 const STORAGE_KEY = 'sentia_settings';
 
-const DEFAULT_SETTINGS = {
+export const DEFAULT_SETTINGS = {
   reminderEnabled: true,
   reminderTime: '21:00',
   insightDelivery: 'weekly', // 'daily' | 'weekly' | 'off'

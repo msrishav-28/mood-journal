@@ -14,10 +14,6 @@ export default function Profile() {
   const [streak, setStreak] = useState(0);
   const [weeksSinceJoin, setWeeksSinceJoin] = useState(0);
 
-  useEffect(() => {
-    loadStats();
-  }, [user?.id]);
-
   const loadStats = async () => {
     if (!user?.id) return;
     setEntryCount(await entriesService.getEntryCount(user.id));
@@ -27,6 +23,11 @@ export default function Profile() {
     const weeks = Math.max(1, Math.ceil((Date.now() - created.getTime()) / (7 * 24 * 60 * 60 * 1000)));
     setWeeksSinceJoin(weeks);
   };
+
+  useEffect(() => {
+    loadStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   const persona = settings.persona || user?.persona || 'wellness';
   const personaLabel = persona === 'student' ? 'Student' : persona === 'professional' ? 'Working Professional' : 'General Wellness';

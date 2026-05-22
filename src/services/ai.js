@@ -17,7 +17,7 @@ const delay = (ms) => new Promise(r => setTimeout(r, ms));
  * Transcribe audio blob using OpenAI Whisper.
  * Placeholder: returns a mock transcript after a short delay.
  */
-export const transcribeAudio = async (audioBlob) => {
+export const transcribeAudio = async (_audioBlob) => {
   if (isConfigured()) {
     // TODO: Real Whisper API call
     // const formData = new FormData();
@@ -49,7 +49,7 @@ export const transcribeAudio = async (audioBlob) => {
  * Analyze a transcript using GPT-4o.
  * Extracts: dominant emotion, tags, AI insight/reflection.
  */
-export const analyzeTranscript = async (transcript, persona = 'wellness') => {
+export const analyzeTranscript = async (transcript, _persona = 'wellness') => {
   if (isConfigured()) {
     // TODO: Real GPT-4o API call
     // const res = await fetch('https://api.openai.com/v1/chat/completions', { ... });
@@ -108,7 +108,7 @@ export const analyzeTranscript = async (transcript, persona = 'wellness') => {
 /**
  * Generate a context-aware journaling prompt.
  */
-export const generatePrompt = async (persona = 'wellness', recentEntries = []) => {
+export const generatePrompt = async (persona = 'wellness', _recentEntries = []) => {
   await delay(300);
 
   const personaPrompts = {

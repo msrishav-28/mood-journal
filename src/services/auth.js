@@ -64,7 +64,7 @@ export const signIn = async (email, password) => {
     throw new Error('Invalid email or password.');
   }
 
-  const { passwordHash, ...user } = found;
+  const { passwordHash: _passwordHash, ...user } = found;
   setSession(user);
   return user;
 };
@@ -86,7 +86,7 @@ export const signInWithGoogle = async () => {
   const users = getStoredUsers();
   const existing = users.find(u => u.email === googleUser.email);
   if (existing) {
-    const { passwordHash, ...user } = existing;
+    const { passwordHash: _passwordHash, ...user } = existing;
     setSession(user);
     return user;
   }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, Square, Check, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -28,16 +28,19 @@ export default function Home() {
   const audioChunksRef = useRef([]);
   const startTimeRef = useRef(null);
 
-  useEffect(() => {
-    setWaveBars(generateWaveBars());
-    loadPrompt();
-  }, []);
-
-  const loadPrompt = async () => {
+  const loadPrompt = useCallback(async () => {
     const persona = settings.persona || user?.persona || 'wellness';
     const prompt = await ai.generatePrompt(persona);
     setSmartPrompt(prompt);
-  };
+  }, [settings.persona, user?.persona]);
+
+  useEffect(() => {
+    setWaveBars(generateWaveBars());
+  }, []);
+
+  useEffect(() => {
+    loadPrompt();
+  }, [loadPrompt]);
 
   // Greeting based on time of day
   const getGreeting = () => {
