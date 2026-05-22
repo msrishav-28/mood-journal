@@ -26,13 +26,13 @@
 
 ---
 
-## 📖 Overview
+## Overview
 
 Sentia was built to remove the friction from journaling. Blank pages can be intimidating, and typing feels like work. With Sentia, you simply open the app, tap record, and talk. 
 
 The application transcribes your thoughts using high-performance speech APIs and uses AI to analyze emotional sentiment, automatically tag your entries, and provide gentle, thoughtful reflections ("Sentia Reflects").
 
-## ✨ Core Features
+## Core Features
 
 - **Voice-First Journaling:** Hands-free recording using the `MediaRecorder` API.
 - **Dual-Engine Speech-to-Text:** Employs Deepgram's `nova-2` API (primary) or OpenAI Whisper API (fallback) for transcription.
@@ -45,7 +45,7 @@ The application transcribes your thoughts using high-performance speech APIs and
 - **Export Anywhere:** Local and flexible data ownership. Export your journals to **PDF (styled)**, **CSV**, or **Plain Text**.
 - **Settings & Context:** Adjustable settings for daily reminders, AI delivery preference, and Persona Context (Student, Professional, Wellness) to tailor AI insights.
 
-## 🏗️ Architecture
+## Architecture
 
 Sentia operates on a modular **Service Layer Architecture** allowing local-first placeholder usage with a seamless transition to a production cloud backend.
 
@@ -66,7 +66,7 @@ src/
 
 For more details on setting up the real backend, database schemas, and firebase rules, see **[Backend Setup Guide](docs/BACKEND_SETUP.md)**.
 
-## 🚀 Quick Start (Local Development)
+## Quick Start (Local Development)
 
 The app is currently configured to run entirely in the browser using `localStorage` to simulate backend services. This ensures a zero-friction setup.
 
@@ -84,7 +84,7 @@ npm run dev
 
 Visit `http://localhost:5173` (or the port specified in console) to start using the app.
 
-## 🌐 Vercel Deployment
+## Vercel Deployment
 
 This project is fully optimized for **Vercel** deployment out of the box.
 
@@ -94,7 +94,7 @@ This project is fully optimized for **Vercel** deployment out of the box.
 4. The `vercel.json` file ensures that React Router Single Page Application (SPA) routing works correctly by rewriting traffic to `index.html`.
 5. Deploy!
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Framework:** React 18 (Vite) + React Router v7
 - **Styling:** Tailwind CSS + Vanilla CSS (Variables)
@@ -104,7 +104,7 @@ This project is fully optimized for **Vercel** deployment out of the box.
 - **Target Backend:** Firebase Auth + Cloud Firestore
 - **Target AI/STT:** Deepgram (Nova-2) & OpenAI (GPT-4o-mini + Whisper)
 
-## 🎨 Design System
+## Design System
 
 Sentia uses a custom tailored semantic design system built on custom colors rather than generic utility frameworks:
 - **Canvas (`var(--color-canvas)`):** `#F7F6F2` (Warm, paper-like background)
